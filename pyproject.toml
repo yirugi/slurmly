@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "slurmly"
+version = "0.1.0"
+description = "SSH-only Slurm cluster client library"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "slurmly contributors" }]
+dependencies = [
+    "asyncssh>=2.14",
+    "pydantic>=2.5",
+]
+
+[project.optional-dependencies]
+yaml = ["PyYAML>=6.0"]
+toml = []  # tomllib is stdlib on py>=3.11
+dev = [
+    "pytest>=7.4",
+    "pytest-asyncio>=0.23",
+    "PyYAML>=6.0",
+    "ruff>=0.1",
+    "mypy>=1.7",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["slurmly*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
