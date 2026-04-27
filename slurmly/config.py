@@ -49,7 +49,7 @@ def build_client_from_config(
     execution_profiles = _build_execution_profiles(raw, preset)
     ssh_config = _build_ssh_config(raw, preset)
     remote_base_dir = _resolve_remote_base_dir(raw, preset, ssh_config.username)
-    default_account = _resolve_default_account(raw)
+    account = _resolve_account(raw)
     max_concurrent = _resolve_max_concurrent_commands(raw)
 
     transport = transport_override or AsyncSSHTransport(ssh_config)
@@ -59,7 +59,7 @@ def build_client_from_config(
         cluster_profile=cluster_profile,
         remote_base_dir=remote_base_dir,
         execution_profiles=execution_profiles,
-        default_account=default_account,
+        account=account,
         max_concurrent_commands=max_concurrent,
     )
     if hooks is not None:
@@ -302,7 +302,7 @@ def _resolve_remote_base_dir(
 # --- account ---------------------------------------------------------------
 
 
-def _resolve_default_account(raw: dict[str, Any]) -> str | None:
+def _resolve_account(raw: dict[str, Any]) -> str | None:
     slurm_section = raw.get("slurm") or {}
     if isinstance(slurm_section, dict):
         return slurm_section.get("account")

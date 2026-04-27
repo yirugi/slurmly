@@ -113,10 +113,10 @@ class SlurmSSHClient:
         self,
         *,
         transport: SSHTransport,
-        cluster_profile: ClusterProfile,
         remote_base_dir: str,
+        cluster_profile: ClusterProfile | None = None,
         execution_profiles: dict[str, ExecutionProfile] | None = None,
-        default_account: str | None = None,
+        account: str | None = None,
         hooks: SlurmlyHooks | None = None,
         max_concurrent_commands: int = 8,
     ) -> None:
@@ -125,10 +125,10 @@ class SlurmSSHClient:
         if max_concurrent_commands < 1:
             raise InvalidConfig("max_concurrent_commands must be >= 1")
         self._transport = transport
-        self._cluster_profile = cluster_profile
+        self._cluster_profile = cluster_profile or ClusterProfile()
         self._remote_base_dir = remote_base_dir
         self._execution_profiles: dict[str, ExecutionProfile] = dict(execution_profiles or {})
-        self._default_account = default_account
+        self._account = account
         self._hooks = hooks or SlurmlyHooks()
         self._semaphore = asyncio.Semaphore(max_concurrent_commands)
         self._max_concurrent_commands = max_concurrent_commands
@@ -174,6 +174,47 @@ class SlurmSSHClient:
 
         return build_client_from_config(
             path, transport_override=transport, hooks=hooks
+        )
+
+    @classmethod
+    def connect(
+        cls,
+        *,
+        host: str,
+        username: str,
+        remote_base_dir: str,
+        key_path: str | None = None,
+        port: int = 22,
+        known_hosts_path: str | None = None,
+        cluster_profile: ClusterProfile | None = None,
+        execution_profiles: dict[str, ExecutionProfile] | None = None,
+        account: str | None = None,
+        hooks: SlurmlyHooks | None = None,
+        max_concurrent_commands: int = 8,
+    ) -> "SlurmSSHClient":
+        """Convenience factory: build SSHConfig + AsyncSSHTransport from kwargs.
+
+        For full control (proxy_jump, custom timeouts, heredoc upload, …)
+        construct `SSHConfig` + `AsyncSSHTransport` explicitly and pass them
+        to the regular constructor.
+        """
+        from .ssh.transport import AsyncSSHTransport, SSHConfig
+
+        transport = AsyncSSHTransport(SSHConfig(
+            host=host,
+            username=username,
+            port=port,
+            key_path=key_path,
+            known_hosts_path=known_hosts_path,
+        ))
+        return cls(
+            transport=transport,
+            remote_base_dir=remote_base_dir,
+            cluster_profile=cluster_profile,
+            execution_profiles=execution_profiles,
+            account=account,
+            hooks=hooks,
+            max_concurrent_commands=max_concurrent_commands,
         )
 
     # --- lifecycle ---
@@ -1067,11 +1108,12 @@ class SlurmSSHClient:
         """
         if spec.account is not None:
             return spec
-        account = self._default_account or self._cluster_profile.default_account
+        account = self._account or self._cluster_profile.default_account
         if account is None:
             raise InvalidConfig(
-                "no account is set: provide JobSpec.account, slurm.account in "
-                "config, or ClusterProfile.default_account"
+                "no account is set: provide JobSpec.account, "
+                "SlurmSSHClient(account=...), slurm.account in config, "
+                "or ClusterProfile.default_account"
             )
         return spec.model_copy(update={"account": account})
 

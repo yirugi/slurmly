@@ -12,6 +12,7 @@ Phase 3 additions:
 
 from __future__ import annotations
 
+import os
 import shlex
 from dataclasses import dataclass
 
@@ -86,9 +87,9 @@ class AsyncSSHTransport:
             "keepalive_count_max": cfg.keepalive_count_max,
         }
         if cfg.key_path:
-            connect_kwargs["client_keys"] = [cfg.key_path]
+            connect_kwargs["client_keys"] = [os.path.expanduser(cfg.key_path)]
         if cfg.known_hosts_path:
-            connect_kwargs["known_hosts"] = cfg.known_hosts_path
+            connect_kwargs["known_hosts"] = os.path.expanduser(cfg.known_hosts_path)
         if cfg.proxy_command:
             connect_kwargs["proxy_command"] = cfg.proxy_command
         if cfg.proxy_jump:
