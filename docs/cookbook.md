@@ -383,9 +383,8 @@ loss is a worse failure mode than surfacing the error.
 
 ## 14. Combining everything: an Anvil end-to-end
 
-This is what `dev/smoke_full_live.py` does at a high level — submit a few jobs,
-poll, get logs, exercise arrays/dependencies, batch-status, artifacts, and
-cleanup:
+A full lifecycle — submit a few jobs, poll, get logs, exercise arrays /
+dependencies / batch-status / artifacts, and cleanup:
 
 ```python
 import asyncio

@@ -1,7 +1,3 @@
-# Local-only directories — kept out of source control by request.
-dev/
-examples/
-tests/
 .claude/
 
 # Python build / packaging artifacts.

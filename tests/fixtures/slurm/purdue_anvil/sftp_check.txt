@@ -1,0 +1,16 @@
+=== sftp openghm <<<'pwd' ===
+sftp> pwd
+Remote working directory: /home/x-openghm
+sftp> ls -la /anvil/scratch/x-openghm/slurmly_phase0
+drwxr-xr-x    4 x-openghm x-ees260008     4096 Apr 26 12:30 .
+drwx------    5 x-openghm x-ees260008     4096 Apr 26 12:30 ..
+drwxr-xr-x    8 x-openghm x-ees260008     4096 Apr 26 12:32 jobs
+drwxr-xr-x    2 x-openghm x-ees260008     4096 Apr 26 12:31 scripts
+
+=== sftp version ===
+sftp: illegal option -- V
+usage: sftp [-46AaCfNpqrv] [-B buffer_size] [-b batchfile] [-c cipher]
+          [-D sftp_server_command] [-F ssh_config] [-i identity_file]
+          [-J destination] [-l limit] [-o ssh_option] [-P port]
+          [-R num_requests] [-S program] [-s subsystem | sftp_server]
+          [-X sftp_option] destination

@@ -1,0 +1,4 @@
+JobID|JobName|Partition|Account|AllocCPUS|State|ExitCode
+16680647|slurmly-success|shared|ees260008|1|COMPLETED|0:0
+16680647.batch|batch||ees260008|1|COMPLETED|0:0
+16680647.extern|extern||ees260008|1|COMPLETED|0:0

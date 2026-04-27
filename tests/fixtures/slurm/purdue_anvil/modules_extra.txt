@@ -1,0 +1,67 @@
+== module spider ngc ==
+Lmod has detected the following error: Unable to find: "ngc".
+
+
+
+
+== module spider biocontainers ==
+
+----------------------------------------------------------------------------
+  biocontainers: biocontainers/default
+----------------------------------------------------------------------------
+
+    This module can be loaded directly: module load biocontainers/default
+
+    Help:
+              biocontainers - Load this first to make BioContainers application modules available.
+      
+
+
+ 
+
+
+== module spider modtree ==
+
+----------------------------------------------------------------------------
+  modtree:
+----------------------------------------------------------------------------
+    Description:
+      ModuleTree or modtree helps users naviagate between different
+      application stacks and sets up a default compiler and mpi
+      environment. For example, if you are working on the GPU 	nodes, you
+      will need to load the applications built with GPU support. This can
+      be done by 	loading the 'modtree/gpu' module. Similarly, to load
+      applications without gpu support, load 	the 'modtree/cpu' module.
+      	Note that by default, 'modtree' will initialize your environment
+      with a default set of modules 	such as gcc, openmpi, and cuda. If you
+      want a different compiler/mpi environment or different 	versions,
+      please load the relevant modules explicitly. 	The default gcc version
+      in 'modtree/gpu' is 8.4.1. This has been selected to provide support
+      	with a wide variety of cuda versions. 	
+
+     Versions:
+        modtree/cpu
+
+== after modtree/gpu, ngc available? ==
+
+Inactive Modules:
+  1) xalt
+
+
+------------------------------ Core Applications -------------------------------
+   ngc/default
+
+If the avail list is too long consider trying:
+
+"module --default avail" or "ml -d av" to just list the default modules.
+"module overview" or "ml ov" to display the number of modules for each name.
+
+Use "module spider" to find all possible modules and extensions.
+Use "module keyword key1 key2 ..." to search for all possible modules matching
+any of the "keys".
+
+
+
+== sftp subsystem present ==
+ls: cannot access '/usr/libexec/openssh/sftp-server': No such file or directory
+/usr/bin/which: no sftp-server in (/apps/anvilgpu/external/apps/cuda-toolkit/11.2.2/bin:/apps/spack/anvilgpu/apps/openmpi/4.0.6-gcc-8.4.1-qwhr2ur/bin:/apps/spack/anvilgpu/apps/numactl/2.0.14-gcc-8.4.1-75uba5t/bin:/apps/spack/anvilgpu/apps/gcc/8.4.0-gcc-8.5.0-ihd2epi/bin:/home/x-openghm/bin:/home/x-openghm/.local/bin:/usr/libexec/gsissh/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/puppetlabs/bin:/usr/site/rcac/sbin:/usr/site/rcac/bin:/usr/site/rcac/scripts:/opt/thinlinc/bin:/opt/thinlinc/sbin)

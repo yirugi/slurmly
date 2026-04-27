@@ -1,0 +1,226 @@
+== sinfo unique partitions ==
+ai
+debug
+gpu
+gpu-debug
+highmem
+profiling
+shared*
+standard
+wholenode
+wide
+
+== sinfo -o (P/A/L/D/T) ==
+PARTITION AVAIL TIMELIMIT NODES STATE
+wholenode up infinite 1 inval
+wholenode up infinite 1 comp*
+wholenode up infinite 3 drain*
+wholenode up infinite 7 down*
+wholenode up infinite 26 drain
+wholenode up infinite 686 alloc
+wholenode up infinite 26 idle
+standard up infinite 1 inval
+standard up infinite 1 comp*
+standard up infinite 3 drain*
+standard up infinite 7 down*
+standard up infinite 26 drain
+standard up infinite 686 alloc
+standard up infinite 26 idle
+shared* up infinite 1 drain*
+shared* up infinite 1 down*
+shared* up infinite 2 comp
+shared* up infinite 2 drain
+shared* up infinite 1 resv
+shared* up infinite 102 mix
+shared* up infinite 66 alloc
+shared* up infinite 75 idle
+wide up infinite 1 inval
+wide up infinite 1 comp*
+wide up infinite 3 drain*
+wide up infinite 7 down*
+wide up infinite 26 drain
+wide up infinite 682 alloc
+wide up infinite 26 idle
+highmem up infinite 2 mix
+highmem up infinite 3 alloc
+highmem up infinite 27 idle
+debug up infinite 1 drain
+debug up infinite 15 mix
+debug up infinite 1 alloc
+gpu up infinite 13 mix-
+gpu up infinite 1 drain
+gpu up infinite 1 resv
+gpu up infinite 1 alloc
+ai up infinite 13 mix-
+ai up infinite 1 drain*
+ai up infinite 1 down*
+ai up infinite 2 drain
+ai up infinite 2 resv
+ai up infinite 2 alloc
+gpu-debug up infinite 13 mix-
+gpu-debug up infinite 1 drain
+gpu-debug up infinite 1 resv
+gpu-debug up infinite 1 alloc
+profiling up infinite 4 alloc
+
+== partition details (scontrol) ==
+--- debug ---
+PartitionName=debug
+   AllowGroups=ALL AllowAccounts=ALL DenyQos=wangwl-long,dmachi,array-submission,mojtaba,shared-50,node-10,node-1,gpu
+   AllocNodes=ALL Default=NO QoS=part-debug
+   DefaultTime=00:15:00 DisableRootJobs=NO ExclusiveUser=NO ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=128 MaxCPUsPerSocket=UNLIMITED
+   Nodes=a[000-016]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO
+   OverTimeLimit=NONE PreemptMode=CANCEL
+   State=UP TotalCPUs=2176 TotalNodes=17 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerCPU=1896 MaxMemPerNode=UNLIMITED
+   TRES=cpu=2176,mem=4375800M,node=17,billing=2176
+   TRESBillingWeights=CPU=1.0
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+
+--- shared ---
+PartitionName=shared
+   AllowGroups=ALL AllowAccounts=ALL DenyQos=wide-80,node-10,node-1,gpu,hw_perf
+   AllocNodes=ALL Default=YES QoS=part-shared
+   DefaultTime=00:30:00 DisableRootJobs=NO ExclusiveUser=NO ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=128 MaxCPUsPerSocket=UNLIMITED
+   Nodes=a[000-249]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO
+   OverTimeLimit=NONE PreemptMode=CANCEL
+   State=UP TotalCPUs=32000 TotalNodes=250 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerCPU=1896 MaxMemPerCPU=1896
+   TRES=cpu=32000,mem=64350000M,node=250,billing=32000
+   TRESBillingWeights=CPU=1.0
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+
+--- standard ---
+PartitionName=standard
+   AllowGroups=ALL AllowAccounts=ALL DenyQos=wangwl-long,mojtaba,wide-80,shared-50,gpu
+   AllocNodes=ALL Default=NO QoS=part-standard
+   DefaultTime=00:30:00 DisableRootJobs=NO ExclusiveUser=NO ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=128 MaxCPUsPerSocket=UNLIMITED
+   Nodes=a[250-999]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=EXCLUSIVE
+   OverTimeLimit=NONE PreemptMode=CANCEL
+   State=UP TotalCPUs=96000 TotalNodes=750 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerNode=UNLIMITED MaxMemPerNode=UNLIMITED
+   TRES=cpu=96000,mem=193050000M,node=750,billing=96000
+   TRESBillingWeights=CPU=1.0
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+
+--- wholenode ---
+PartitionName=wholenode
+   AllowGroups=ALL AllowAccounts=ALL DenyQos=wangwl-long,mojtaba,wide-80,shared-50,gpu
+   AllocNodes=ALL Default=NO QoS=part-standard
+   DefaultTime=00:30:00 DisableRootJobs=NO ExclusiveUser=NO ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=128 MaxCPUsPerSocket=UNLIMITED
+   Nodes=a[250-999]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=EXCLUSIVE
+   OverTimeLimit=NONE PreemptMode=CANCEL
+   State=UP TotalCPUs=96000 TotalNodes=750 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerNode=UNLIMITED MaxMemPerNode=UNLIMITED
+   TRES=cpu=96000,mem=193050000M,node=750,billing=96000
+   TRESBillingWeights=CPU=1.0
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+
+--- wide ---
+PartitionName=wide
+   AllowGroups=ALL AllowAccounts=ALL DenyQos=wangwl-long,dmachi,array-submission,mojtaba,shared-50,node-10,node-1,gpu
+   AllocNodes=ALL Default=NO QoS=part-wide
+   DefaultTime=00:30:00 DisableRootJobs=NO ExclusiveUser=NO ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=128 MaxCPUsPerSocket=UNLIMITED
+   Nodes=a[250-995]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=EXCLUSIVE
+   OverTimeLimit=NONE PreemptMode=CANCEL
+   State=UP TotalCPUs=95488 TotalNodes=746 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerNode=UNLIMITED MaxMemPerNode=UNLIMITED
+   TRES=cpu=95488,mem=192020400M,node=746,billing=95488
+   TRESBillingWeights=CPU=1.0
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+
+--- highmem ---
+PartitionName=highmem
+   AllowGroups=ALL AllowAccounts=ALL DenyQos=wangwl-long,dmachi,array-submission,mojtaba,shared-50,node-10,node-1,gpu
+   AllocNodes=ALL Default=NO QoS=part-highmem
+   DefaultTime=00:30:00 DisableRootJobs=NO ExclusiveUser=NO ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=128 MaxCPUsPerSocket=UNLIMITED
+   Nodes=b[000-031]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO
+   OverTimeLimit=NONE PreemptMode=CANCEL
+   State=UP TotalCPUs=4096 TotalNodes=32 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerCPU=7950 MaxMemPerCPU=7950
+   TRES=cpu=4096,mem=33004800M,node=32,billing=16384
+   TRESBillingWeights=CPU=4.0
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+
+--- profiling ---
+PartitionName=profiling
+   AllowGroups=ALL AllowAccounts=ALL DenyQos=wangwl-long,mojtaba,wide-80,shared-50,gpu
+   AllocNodes=ALL Default=NO QoS=part-profiling
+   DefaultTime=00:30:00 DisableRootJobs=NO ExclusiveUser=NO ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=128 MaxCPUsPerSocket=UNLIMITED
+   Nodes=a[996-999]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=EXCLUSIVE
+   OverTimeLimit=NONE PreemptMode=CANCEL
+   State=UP TotalCPUs=512 TotalNodes=4 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerNode=UNLIMITED MaxMemPerNode=UNLIMITED
+   TRES=cpu=512,mem=1029600M,node=4,billing=512
+   TRESBillingWeights=CPU=1.0
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+
+--- gpu ---
+PartitionName=gpu
+   AllowGroups=ALL AllowAccounts=ALL DenyQos=cpu,wangwl-long,mojtaba,dmachi,node-10,node-1
+   AllocNodes=ALL Default=NO QoS=part-gpu
+   DefaultTime=00:30:00 DisableRootJobs=NO ExclusiveUser=NO ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=128 MaxCPUsPerSocket=UNLIMITED
+   Nodes=g[000-015]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO
+   OverTimeLimit=NONE PreemptMode=CANCEL
+   State=UP TotalCPUs=2048 TotalNodes=16 SelectTypeParameters=NONE
+   JobDefaults=DefMemPerGPU=120000
+   DefMemPerCPU=3750 MaxMemPerNode=UNLIMITED
+   TRES=cpu=2048,mem=8246400M,node=16,billing=64,gres/gpu=64
+   TRESBillingWeights=GRES/gpu=1.0
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+
+--- gpu-debug ---
+PartitionName=gpu-debug
+   AllowGroups=ALL AllowAccounts=ALL DenyQos=cpu,wangwl-long,mojtaba,dmachi,node-10,node-1
+   AllocNodes=ALL Default=NO QoS=part-gpu-debug
+   DefaultTime=00:15:00 DisableRootJobs=NO ExclusiveUser=NO ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=128 MaxCPUsPerSocket=UNLIMITED
+   Nodes=g[000-015]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO
+   OverTimeLimit=NONE PreemptMode=CANCEL
+   State=UP TotalCPUs=2048 TotalNodes=16 SelectTypeParameters=NONE
+   JobDefaults=DefMemPerGPU=120000
+   DefMemPerCPU=3750 MaxMemPerNode=UNLIMITED
+   TRES=cpu=2048,mem=8246400M,node=16,billing=64,gres/gpu=64
+   TRESBillingWeights=GRES/gpu=1.0
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+
+--- ai ---
+PartitionName=ai
+   AllowGroups=ALL AllowAccounts=ALL DenyQos=cpu,wangwl-long,mojtaba,dmachi,node-10,node-1
+   AllocNodes=ALL Default=NO QoS=part-ai
+   DefaultTime=00:30:00 DisableRootJobs=NO ExclusiveUser=NO ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=96 MaxCPUsPerSocket=UNLIMITED
+   Nodes=h[000-020]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO
+   OverTimeLimit=NONE PreemptMode=CANCEL
+   State=UP TotalCPUs=2016 TotalNodes=21 SelectTypeParameters=NONE
+   JobDefaults=DefMemPerGPU=240000
+   DefMemPerCPU=7500 MaxMemPerNode=UNLIMITED
+   TRES=cpu=2016,mem=21651000M,node=21,billing=84,gres/gpu=84
+   TRESBillingWeights=GRES/gpu=1.0
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+

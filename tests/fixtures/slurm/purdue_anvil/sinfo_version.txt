@@ -1,0 +1,8 @@
+== sinfo --version ==
+slurm 25.11.1
+== scontrol --version ==
+slurm 25.11.1
+== sbatch --version ==
+slurm 25.11.1
+== sacct --version ==
+slurm 25.11.1

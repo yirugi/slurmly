@@ -1,0 +1,35 @@
+slurmly Phase 0 fixture set — Purdue RCAC Anvil
+collected_at: 2026-04-26
+collected_by: x-openghm (uid=8013088, gid=x-ees260008)
+slurm_version: 25.11.1
+cluster: anvil
+login_node: login05.anvil.rcac.purdue.edu
+account: ees260008
+qos: cpu (only QoS available — GPU partitions inaccessible)
+remote_work_dir: /anvil/scratch/x-openghm/slurmly_phase0/
+
+job_id        | partition | terminal_state    | purpose                                 | fixtures
+16680647      | shared    | COMPLETED         | success path (echo)                     | sbatch_success.txt, sacct_completed.json, sacct_with_steps.json, sacct_parsable2_completed.txt, sacct_with_steps_parsable2.txt
+16680653      | shared    | COMPLETED         | sleep 240s → pending/running snapshots  | squeue_pending.json (PENDING), squeue_running.json (RUNNING)
+16680664      | shared    | FAILED (exit 42)  | non-zero exit → sacct shows FAILED       | sacct_failed.json
+16680665      | shared    | CANCELLED         | scancel while PENDING (never started)    | sacct_cancelled.json
+16680666      | shared    | TIMEOUT           | sleep 300s with --time=00:01:00          | sacct_timeout.json
+16680739;anvil| shared    | CANCELLED         | sbatch --clusters=anvil --parsable form  | sbatch_success_with_cluster.txt (jobid;cluster)
+16680748      | shared    | OUT_OF_MEMORY     | --mem=200M + python alloc 1GiB           | sacct_oom.json
+
+negative cases (no jobid):
+  sbatch_invalid_partition.txt — sbatch --partition=__nope__ → exit 1, stderr captured
+  squeue_empty.json            — squeue --json --name=__slurmly_no_such_job__
+
+connectivity checks:
+  sftp_check.txt              — sftp openghm pwd / ls /anvil/scratch/...
+  sinfo_version.txt           — sinfo/scontrol/sbatch/sacct --version
+  sinfo_partitions.txt        — sinfo + scontrol show partition (per-partition details)
+  cluster_facts.txt           — sacctmgr/sshare/df/mount/sshd info
+  modules_extra.txt           — module spider for ngc/biocontainers, modtree composition
+
+caveats:
+  - 16680665 was CANCELLED while PENDING; CANCELLED-while-RUNNING was not captured.
+    Slurm reports both as State=CANCELLED but Start/End columns differ.
+  - 16680666 (TIMEOUT) parent state is TIMEOUT but its .batch step is CANCELLED with ExitCode 0:15.
+  - GPU directives, NGC module, and biocontainers module did not run real jobs (QoS=cpu).

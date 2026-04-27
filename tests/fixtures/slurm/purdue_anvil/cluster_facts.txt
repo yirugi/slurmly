@@ -1,0 +1,71 @@
+== sacctmgr show assoc ==
+Cluster|Account|User|Partition|Share|Priority|GrpJobs|GrpTRES|GrpSubmit|GrpWall|GrpTRESMins|MaxJobs|MaxTRES|MaxTRESPerNode|MaxSubmit|MaxWall|MaxTRESMins|QOS|Def QOS|GrpTRESRunMins
+anvil|ees260008|x-openghm||1|||||||||||||cpu|cpu|
+
+== sacctmgr show user ==
+User|Account|Partition|QOS|Def QOS
+x-openghm|ees260008||cpu|cpu
+
+== sshare ==
+Account                    User  RawShares  NormShares    RawUsage  EffectvUsage  FairShare 
+-------------------- ---------- ---------- ----------- ----------- ------------- ---------- 
+ees260008             x-openghm          1    0.166667      250190      0.572761   0.702562 
+
+== whoami / id ==
+x-openghm
+uid=8013088(x-openghm) gid=7009191(x-ees260008) groups=7009191(x-ees260008)
+
+== module avail (filtered) ==
+
+------------------------------ Core Applications -------------------------------
+   anaconda/2021.05-py38         anaconda/2025.12-py313        modtree/gpu (D)
+   anaconda/2024.02-py311 (D)    biocontainers/default
+   anaconda/2025.06-py313        modtree/cpu            (L)
+
+  Where:
+   D:  Default Module
+   L:  Module is loaded
+
+If the avail list is too long consider trying:
+
+"module --default avail" or "ml -d av" to just list the default modules.
+"module overview" or "ml ov" to display the number of modules for each name.
+
+Use "module spider" to find all possible modules and extensions.
+Use "module keyword key1 key2 ..." to search for all possible modules matching
+any of the "keys".
+
+
+
+== module avail openmpi/mvapich (sample) ==
+
+---------------------- Applications built with GCC 11.2.0 ----------------------
+   openmpi/3.1.6    openmpi/4.0.6 (L,D)    openmpi/4.1.6
+
+  Where:
+   D:  Default Module
+   L:  Module is loaded
+
+If the avail list is too long consider trying:
+
+
+== df -h ==
+Filesystem                       Size  Used Avail Use% Mounted on
+zfs.anvil.rcac.purdue.edu:/home   49T   33T   17T  67% /home
+anvil                             11P  7.0P  3.4P  68% /anvil
+zfs.anvil.rcac.purdue.edu:/home   49T   33T   17T  67% /home
+
+== filesystem types ==
+Filesystem                      Type      1K-blocks          Used     Available Use% Mounted on
+zfs.anvil.rcac.purdue.edu:/home nfs     52008112128   34586189312   17421922816  67% /home
+anvil                           gpfs 11357271392256 7648256573440 3709014818816  68% /anvil
+
+== mount info /anvil ==
+zfs.anvil.rcac.purdue.edu:/home on /home type nfs (rw,nosuid,nodev,relatime,vers=3,rsize=131072,wsize=524288,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=172.18.95.221,mountvers=3,mountport=20048,mountproto=tcp,local_lock=none,addr=172.18.95.221)
+zfs.anvil.rcac.purdue.edu:/repos on /repos type nfs (rw,nosuid,nodev,relatime,vers=3,rsize=131072,wsize=524288,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=172.18.95.221,mountvers=3,mountport=20048,mountproto=tcp,local_lock=none,addr=172.18.95.221)
+zfs.anvil.rcac.purdue.edu:/apps on /apps type nfs (rw,nosuid,nodev,relatime,vers=3,rsize=131072,wsize=524288,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=172.18.95.221,mountvers=3,mountport=20048,mountproto=tcp,local_lock=none,addr=172.18.95.221)
+anvil on /anvil type gpfs (rw,relatime)
+
+== sshd MaxSessions (try) ==
+256
+grep: /etc/ssh/sshd_config: Permission denied

@@ -1,0 +1,48 @@
+{
+   "jobs": [
+   ],
+   "last_backfill": {
+     "set": true,
+     "infinite": false,
+     "number": 1777221112
+   },
+   "last_update": {
+     "set": true,
+     "infinite": false,
+     "number": 1777221146
+   },
+   "meta": {
+     "plugin": {
+       "type": "",
+       "name": "",
+       "data_parser": "data_parser\/v0.0.44",
+       "accounting_storage": "accounting_storage\/slurmdbd"
+     },
+     "client": {
+       "source": "",
+       "user": "x-openghm",
+       "group": "x-ees260008"
+     },
+     "command": [
+       "squeue",
+       "--json"
+     ],
+     "slurm": {
+       "version": {
+         "major": "25",
+         "micro": "1",
+         "minor": "11"
+       },
+       "release": "25.11.1",
+       "cluster": "anvil"
+     }
+   },
+   "errors": [
+   ],
+   "warnings": [
+     {
+       "description": "Zero jobs to dump",
+       "source": ""
+     }
+   ]
+ }

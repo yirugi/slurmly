@@ -1,0 +1,242 @@
+{
+   "jobs": [
+     {
+       "account": "ees260008",
+       "comment": {
+         "administrator": "",
+         "job": "",
+         "system": ""
+       },
+       "allocation_nodes": 0,
+       "array": {
+         "job_id": 0,
+         "limits": {
+           "max": {
+             "running": {
+               "tasks": 0
+             }
+           }
+         },
+         "task_id": {
+           "set": false,
+           "infinite": false,
+           "number": 0
+         },
+         "task": ""
+       },
+       "association": {
+         "account": "",
+         "cluster": "anvil",
+         "partition": "",
+         "user": "",
+         "id": 38702
+       },
+       "block": "",
+       "cluster": "anvil",
+       "constraints": "",
+       "container": "",
+       "derived_exit_code": {
+         "status": [
+           "SUCCESS"
+         ],
+         "return_code": {
+           "set": true,
+           "infinite": false,
+           "number": 0
+         },
+         "signal": {
+           "id": {
+             "set": false,
+             "infinite": false,
+             "number": 0
+           },
+           "name": ""
+         }
+       },
+       "time": {
+         "elapsed": 0,
+         "eligible": 1777221080,
+         "end": 1777221096,
+         "planned": {
+           "set": true,
+           "infinite": false,
+           "number": 16
+         },
+         "start": 4294967294,
+         "submission": 1777221080,
+         "suspended": 0,
+         "system": {
+           "seconds": 0,
+           "microseconds": 0
+         },
+         "limit": {
+           "set": true,
+           "infinite": false,
+           "number": 10
+         },
+         "total": {
+           "seconds": 0,
+           "microseconds": 0
+         },
+         "user": {
+           "seconds": 0,
+           "microseconds": 0
+         }
+       },
+       "exit_code": {
+         "status": [
+           "SUCCESS"
+         ],
+         "return_code": {
+           "set": true,
+           "infinite": false,
+           "number": 0
+         },
+         "signal": {
+           "id": {
+             "set": false,
+             "infinite": false,
+             "number": 0
+           },
+           "name": ""
+         }
+       },
+       "extra": "",
+       "failed_node": "",
+       "flags": [
+         "START_RECEIVED"
+       ],
+       "group": "x-ees260008",
+       "het": {
+         "job_id": 0,
+         "job_offset": {
+           "set": false,
+           "infinite": false,
+           "number": 0
+         }
+       },
+       "job_id": 16680665,
+       "name": "slurmly-cancel",
+       "licenses": "",
+       "mcs": {
+         "label": ""
+       },
+       "nodes": "None assigned",
+       "partition": "shared",
+       "hold": false,
+       "priority": {
+         "set": true,
+         "infinite": false,
+         "number": 250
+       },
+       "qos": "cpu",
+       "qosreq": "",
+       "required": {
+         "CPUs": 1,
+         "memory_per_cpu": {
+           "set": false,
+           "infinite": false,
+           "number": 0
+         },
+         "memory_per_node": {
+           "set": true,
+           "infinite": false,
+           "number": 256
+         }
+       },
+       "kill_request_user": "x-openghm",
+       "restart_cnt": 0,
+       "reservation": {
+         "id": 0,
+         "name": "",
+         "requested": ""
+       },
+       "script": "",
+       "segment_size": 0,
+       "stdin_expanded": "\/dev\/null",
+       "stdout_expanded": "\/anvil\/scratch\/x-openghm\/slurmly_phase0\/jobs\/cancel\/stdout.log",
+       "stderr_expanded": "\/anvil\/scratch\/x-openghm\/slurmly_phase0\/jobs\/cancel\/stderr.log",
+       "stdout": "\/anvil\/scratch\/x-openghm\/slurmly_phase0\/jobs\/cancel\/stdout.log",
+       "stderr": "\/anvil\/scratch\/x-openghm\/slurmly_phase0\/jobs\/cancel\/stderr.log",
+       "stdin": "\/dev\/null",
+       "state": {
+         "current": [
+           "CANCELLED"
+         ],
+         "reason": "None"
+       },
+       "steps": [
+       ],
+       "submit_line": "sbatch --parsable \/anvil\/scratch\/x-openghm\/slurmly_phase0\/scripts\/run_cancel.sh",
+       "tres": {
+         "allocated": [
+         ],
+         "requested": [
+           {
+             "type": "cpu",
+             "name": "",
+             "id": 1,
+             "count": 1
+           },
+           {
+             "type": "mem",
+             "name": "",
+             "id": 2,
+             "count": 256
+           },
+           {
+             "type": "node",
+             "name": "",
+             "id": 4,
+             "count": 1
+           },
+           {
+             "type": "billing",
+             "name": "",
+             "id": 5,
+             "count": 1
+           }
+         ]
+       },
+       "used_gres": "",
+       "user": "x-openghm",
+       "wckey": {
+         "wckey": "",
+         "flags": [
+         ]
+       },
+       "working_directory": "\/anvil\/scratch\/x-openghm\/slurmly_phase0\/jobs\/cancel"
+     }
+   ],
+   "meta": {
+     "plugin": {
+       "type": "",
+       "name": "",
+       "data_parser": "data_parser\/v0.0.44",
+       "accounting_storage": "accounting_storage\/slurmdbd"
+     },
+     "client": {
+       "source": "",
+       "user": "x-openghm",
+       "group": "x-ees260008"
+     },
+     "command": [
+       "sacct",
+       "--json",
+       "--starttime=now-1day"
+     ],
+     "slurm": {
+       "version": {
+         "major": "25",
+         "micro": "1",
+         "minor": "11"
+       },
+       "release": "25.11.1",
+       "cluster": "anvil"
+     }
+   },
+   "errors": [
+   ],
+   "warnings": [
+   ]
+ }

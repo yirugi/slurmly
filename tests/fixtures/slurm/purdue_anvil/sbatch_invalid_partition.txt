@@ -1,0 +1,9 @@
+=== stdout/stderr (interleaved) ===
+sbatch: error: invalid partition specified: __nope__
+sbatch: error: Batch job submission failed: Invalid partition name specified
+=== exit_code ===
+1
+=== stdout only ===
+=== stderr only ===
+sbatch: error: invalid partition specified: __nope__
+sbatch: error: Batch job submission failed: Invalid partition name specified
