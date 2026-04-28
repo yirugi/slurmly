@@ -65,7 +65,7 @@ client = SlurmSSHClient(
 |-----------------------------|----------|----------------------|-------|
 | `host`                      | yes      | —                    | Login node hostname. |
 | `username`                  | yes      | —                    | Cluster username. |
-| `key_path`                  | no¹      | —                    | Private key. `~` and `~user` are expanded; absolute paths are passed through. |
+| `key_path`                  | no¹      | —                    | **Private key** (no `.pub` extension). `~` and `~user` are expanded at connect time; absolute paths are passed through. |
 | `port`                      | no       | `22`                 | |
 | `known_hosts_path`          | no       | system default²      | When unset, asyncssh uses `~/.ssh/known_hosts` and `/etc/ssh/ssh_known_hosts`. Backend deployments without those files should provide an explicit path. |
 | `connect_timeout_seconds`   | no       | `10.0`               | TCP connect timeout. |
@@ -107,18 +107,23 @@ matches `--partition=` and `sinfo`.
 
 ### `remote_base_dir`
 
-Required. Absolute path on the cluster. Per-job working directories land at
-`<remote_base_dir>/jobs/slurmly-<8hex>/`.
+Optional. Per-job working directories land at `<remote_base_dir>/jobs/slurmly-<8hex>/`.
+Defaults to `~/slurmly` when not set (the remote shell expands `~` on the cluster).
 
-`$HOME` works if your home filesystem has enough space and IOPS — but most HPC sites have
-small NFS-backed home directories and ask users to keep job I/O in scratch. Pick whatever
-makes sense for your cluster (typically `/scratch/<user>/slurmly` or
-`/anvil/scratch/<user>/slurmly` on Anvil — see [anvil.md](anvil.md)).
+For cleanup and artifact path-safety checks, **absolute paths give strict enforcement** —
+slurmly can verify that `rm -rf` and file reads stay inside `<base>/jobs/`. With a
+tilde-based path (the default), those checks are relaxed to `..` and empty-path rejection
+only, since the remote `~` can't be resolved locally.
 
-The path is used for client-side validation (string comparison) of cleanup/artifact
-operations, so it must be a literal absolute path. Shell variables (`$HOME`, `$SCRATCH`)
-are **not** expanded — resolve them once with `ssh <host> 'echo $SCRATCH'` and put the
-result in your config.
+Most HPC sites have small NFS-backed home quotas and ask users to keep job I/O on scratch.
+If your cluster has a dedicated scratch area, prefer an explicit absolute path:
+
+```python
+remote_base_dir="/scratch/myuser/slurmly"    # or /anvil/scratch/x-myuser/slurmly, etc.
+```
+
+Shell variables (`$HOME`, `$SCRATCH`) are **not** expanded by slurmly. Resolve them once
+with `ssh <host> 'echo $SCRATCH'` and put the literal result in your config.
 
 ### `ExecutionProfile`
 
@@ -149,11 +154,11 @@ async with SlurmSSHClient.from_config("slurmly.yaml") as client:
 
 Format detected by extension:
 
-| Extension      | Format | Requirement                                              |
-|----------------|--------|----------------------------------------------------------|
-| `.yaml`, `.yml`| YAML   | optional `slurmly[yaml]` extra (PyYAML)                  |
-| `.toml`        | TOML   | stdlib `tomllib` (Python 3.11+)                          |
-| `.json`        | JSON   | stdlib                                                   |
+| Extension      | Format | Requirement                    |
+|----------------|--------|--------------------------------|
+| `.yaml`, `.yml`| YAML   | PyYAML (bundled)               |
+| `.toml`        | TOML   | stdlib `tomllib` (Python 3.11+)|
+| `.json`        | JSON   | stdlib                         |
 
 ### Top-level shape
 
@@ -164,11 +169,11 @@ cluster:                      # optional — pulls a built-in preset
 ssh:                          # required
   host: ...
   username: ...
-  key_path: ...
+  key_path: ...               # private key path (not .pub)
 
-slurm:                        # required (account / remote_base_dir typically)
+slurm:                        # optional section
   account: ...
-  remote_base_dir: ...
+  remote_base_dir: ...        # optional; defaults to ~/slurmly
 
 cluster_profile:              # optional overrides for any ClusterProfile field
   ...
@@ -201,8 +206,8 @@ Looks up a `ClusterPreset` by name or alias. Currently recognized: `purdue_anvil
 - `ssh.host` (only if you don't set one)
 - `remote_base_dir` (via `remote_base_dir_template`, only if not set explicitly)
 
-If `cluster.preset` is omitted, you must provide `ssh.host`, `slurm.remote_base_dir`,
-and (typically) a `cluster_profile` block.
+If `cluster.preset` is omitted, you must provide `ssh.host` and (typically) a
+`cluster_profile` block. `slurm.remote_base_dir` defaults to `~/slurmly` when omitted.
 
 ### `ssh` section
 
@@ -234,10 +239,7 @@ mapping form does not yet support per-bastion `key_path`.
 | Field             | Required | Default               | Notes |
 |-------------------|----------|-----------------------|-------|
 | `account`         | no       | `None`                | Forwarded to the client as `account=`. Injected into `JobSpec` when the spec doesn't set its own. |
-| `remote_base_dir` | yes¹     | from preset template  | Absolute remote path. |
-
-¹ If unset, the preset's `remote_base_dir_template` is rendered with the SSH
-`username`. With no preset and no path, the loader raises `InvalidConfig`.
+| `remote_base_dir` | no       | `~/slurmly`           | Remote path for per-job working directories. See below. |
 
 ### `cluster_profile` overrides
 

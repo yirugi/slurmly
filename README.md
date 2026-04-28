@@ -19,11 +19,9 @@ Status: `v0.4.0` — Phases 0 through 4 complete.
 
 ```bash
 pip install slurmly
-# YAML config support is optional:
-pip install "slurmly[yaml]"
 ```
 
-Requires Python 3.11+. Runtime dependencies: `asyncssh>=2.14`, `pydantic>=2.5`.
+Requires Python 3.11+. Runtime dependencies: `asyncssh>=2.14`, `pydantic>=2.5`, `PyYAML>=6.0`.
 
 ---
 
@@ -66,11 +64,11 @@ schema. Minimal `slurmly.yaml`:
 ssh:
   host: login.example.edu
   username: myuser
-  key_path: ~/.ssh/cluster_ed25519
+  key_path: ~/.ssh/cluster_ed25519   # private key (not .pub)
 
 slurm:
   account: my_allocation
-  remote_base_dir: /scratch/myuser/slurmly
+  # remote_base_dir defaults to ~/slurmly when omitted
 ```
 
 ```python

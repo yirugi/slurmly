@@ -36,7 +36,7 @@ The single entry point. All SSH-side state lives here.
 SlurmSSHClient(
     *,
     transport: SSHTransport,
-    remote_base_dir: str,
+    remote_base_dir: str = "~/slurmly",
     cluster_profile: ClusterProfile | None = None,
     execution_profiles: dict[str, ExecutionProfile] | None = None,
     account: str | None = None,
@@ -48,7 +48,7 @@ SlurmSSHClient(
 | Parameter                 | Type                                | Description |
 |---------------------------|-------------------------------------|-------------|
 | `transport`               | `SSHTransport`                      | SSH transport (real `AsyncSSHTransport` or test `FakeTransport`). Required. |
-| `remote_base_dir`         | `str`                               | Absolute path on the cluster used as the parent of all per-job working directories. Each job gets `<remote_base_dir>/jobs/slurmly-<8hex>/`. Required. |
+| `remote_base_dir`         | `str`                               | Path on the cluster used as the parent of all per-job working directories. Each job gets `<remote_base_dir>/jobs/slurmly-<8hex>/`. Defaults to `~/slurmly`. Absolute paths enable strict cleanup/artifact path enforcement. |
 | `cluster_profile`         | `ClusterProfile \| None`            | Cluster behavior knobs (allowed partitions, JSON support flags, GPU directive style). Defaults to `ClusterProfile()` (no allow-list restrictions, JSON support assumed). |
 | `execution_profiles`      | `dict[str, ExecutionProfile]`       | Named preambles (module loads, env activation) referenced by `JobSpec.execution_profile`. |
 | `account`                 | `str \| None`                       | Slurm `--account=` injected into `JobSpec` when the spec doesn't set its own. Falls back to `cluster_profile.default_account`. |
@@ -63,7 +63,7 @@ SlurmSSHClient.connect(
     *,
     host: str,
     username: str,
-    remote_base_dir: str,
+    remote_base_dir: str = "~/slurmly",
     key_path: str | None = None,
     port: int = 22,
     known_hosts_path: str | None = None,
@@ -99,8 +99,7 @@ SlurmSSHClient.from_config(
 ```
 
 Build a client from a config file. Format detected by extension (`.yaml`, `.yml`, `.toml`,
-`.json`). YAML requires the optional `slurmly[yaml]` extra. See
-[configuration.md](configuration.md) for the schema.
+`.json`). See [configuration.md](configuration.md) for the schema.
 
 ### Lifecycle
 
@@ -746,6 +745,9 @@ Path validation rules (raise `InvalidConfig`):
 - Contains `..`: rejected.
 - Does not start with `<remote_base_dir>/jobs/` (note the trailing slash —
   `/scratch/u/slurmly-evil/...` does not match `/scratch/u/slurmly`): rejected.
+  This prefix check applies only when `remote_base_dir` is an absolute path.
+  Tilde-based base dirs (`~/slurmly`) skip the prefix check (remote `~` can't be
+  resolved locally) but still enforce the `..` and empty-path rules.
 - Resolves exactly to the jobs root: rejected.
 
 ---
