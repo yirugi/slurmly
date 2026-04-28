@@ -207,6 +207,7 @@ def _build_ssh_config(
         username=username,
         key_path=key_path,
         known_hosts_path=section.get("known_hosts_path"),
+        accept_unknown_hosts=bool(section.get("accept_unknown_hosts", True)),
         connect_timeout_seconds=float(section.get("connect_timeout_seconds", 10.0)),
         command_timeout_seconds=float(section.get("command_timeout_seconds", 30.0)),
         keepalive_interval_seconds=float(section.get("keepalive_interval_seconds", 30.0)),

@@ -67,6 +67,7 @@ client = SlurmSSHClient(
 | `key_path`                  | no¹      | —                    | **Private key** (no `.pub` extension). `~` and `~user` are expanded at connect time; absolute paths are passed through. |
 | `port`                      | no       | `22`                 | |
 | `known_hosts_path`          | no       | system default²      | When unset, asyncssh uses `~/.ssh/known_hosts` and `/etc/ssh/ssh_known_hosts`. Backend deployments without those files should provide an explicit path. |
+| `accept_unknown_hosts`      | no       | `true`               | When `true`, host key verification is disabled (asyncssh `known_hosts=None`). Set to `false` to enforce strict verification via `known_hosts_path` or the system default. |
 | `connect_timeout_seconds`   | no       | `10.0`               | TCP connect timeout. |
 | `command_timeout_seconds`   | no       | `30.0`               | Per-command soft cap. |
 | `keepalive_interval_seconds`| no       | `30.0`               | SSH keepalive cadence. |

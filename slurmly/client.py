@@ -186,6 +186,7 @@ class SlurmSSHClient:
         key_path: str | None = None,
         port: int = 22,
         known_hosts_path: str | None = None,
+        accept_unknown_hosts: bool = True,
         cluster_profile: ClusterProfile | None = None,
         execution_profiles: dict[str, ExecutionProfile] | None = None,
         account: str | None = None,
@@ -206,6 +207,7 @@ class SlurmSSHClient:
             port=port,
             key_path=key_path,
             known_hosts_path=known_hosts_path,
+            accept_unknown_hosts=accept_unknown_hosts,
         ))
         return cls(
             transport=transport,

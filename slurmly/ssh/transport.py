@@ -27,6 +27,7 @@ class SSHConfig:
     port: int = 22
     key_path: str | None = None
     known_hosts_path: str | None = None
+    accept_unknown_hosts: bool = True
     connect_timeout_seconds: float = 10.0
     command_timeout_seconds: float = 30.0
     keepalive_interval_seconds: float = 30.0
@@ -88,7 +89,9 @@ class AsyncSSHTransport:
         }
         if cfg.key_path:
             connect_kwargs["client_keys"] = [os.path.expanduser(cfg.key_path)]
-        if cfg.known_hosts_path:
+        if cfg.accept_unknown_hosts:
+            connect_kwargs["known_hosts"] = None
+        elif cfg.known_hosts_path:
             connect_kwargs["known_hosts"] = os.path.expanduser(cfg.known_hosts_path)
         if cfg.proxy_command:
             connect_kwargs["proxy_command"] = cfg.proxy_command
@@ -100,6 +103,15 @@ class AsyncSSHTransport:
         try:
             self._conn = await asyncssh.connect(**connect_kwargs)
         except Exception as e:
+            exc_name = type(e).__name__
+            if "HostKey" in exc_name or "host key" in str(e).lower():
+                raise SSHTransportError(
+                    f"Host key verification failed for {cfg.host}. "
+                    f"To fix, either:\n"
+                    f"  1. SSH manually once: ssh {cfg.host}\n"
+                    f"  2. Or: ssh-keyscan {cfg.host} >> ~/.ssh/known_hosts\n"
+                    f"  3. Or set accept_unknown_hosts = true in config (disables verification)"
+                ) from e
             raise SSHTransportError(f"failed to connect to {cfg.host}: {e}") from e
         return self._conn
 
