@@ -3,15 +3,12 @@
 **SSH-only Slurm client library for Python.**
 
 `slurmly` controls Slurm clusters by running the standard CLI (`sbatch`, `squeue`, `sacct`,
-`scancel`, `tail`) over SSH against a login node. No REST API, no PySlurm, no C bindings —
+`scancel`) over SSH against a login node. No REST API, no PySlurm, no C bindings —
 if you can `ssh` to the login node, you can drive jobs from Python.
 
 - Fully typed (Pydantic v2), `async`-first, framework-agnostic.
-- Built-in cluster preset for **Purdue RCAC Anvil** (`anvil.rcac.purdue.edu`).
 - First-class support for job arrays, dependencies, batched status, artifacts, cleanup, and capability detection.
 - Observable via typed hooks; testable with an in-memory `FakeTransport` (no SSH or cluster required).
-
-Status: `v0.4.0` — Phases 0 through 4 complete.
 
 ---
 
@@ -36,7 +33,6 @@ async def main():
         host="login.example.edu",
         username="myuser",
         key_path="~/.ssh/cluster_ed25519",       # absolute paths work too
-        remote_base_dir="/scratch/myuser/slurmly",
         account="my_allocation",
     ) as client:
         job = await client.submit(JobSpec(
@@ -107,21 +103,6 @@ async with SlurmSSHClient.from_config("slurmly.yaml") as client:
 | Configuration files (YAML/TOML/JSON) | [docs/configuration.md](docs/configuration.md)  |
 | Purdue Anvil guide                   | [docs/anvil.md](docs/anvil.md)                  |
 | Cookbook (patterns & recipes)        | [docs/cookbook.md](docs/cookbook.md)            |
-
----
-
-## Design notes
-
-- **No placeholder substitution in core.** `command_template` is emitted verbatim;
-  `${SLURM_ARRAY_TASK_ID}` and friends are interpreted by the remote shell. Application-level
-  templating (Jinja, etc.) stays in user code. No template engine becomes a core dependency.
-- **Submission is non-idempotent by design.** A dropped SSH connection during `sbatch`
-  raises an error rather than silently re-submitting. Reconciliation is the caller's
-  responsibility (`SubmittedJob` carries the raw sbatch output for that purpose).
-- **Sync facade is deferred to v0.5+.** Today's API is `async`. Callers in synchronous
-  contexts wrap with `asyncio.run(...)` or `asyncio.run_coroutine_threadsafe(...)`.
-- **Framework integrations live elsewhere.** A `slurmly-fastapi` / `slurmly-celery` /
-  `slurmly-sqlalchemy` package can wrap this core; the core stays framework-agnostic.
 
 ---
 

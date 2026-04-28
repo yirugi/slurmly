@@ -21,8 +21,7 @@ from slurmly import SlurmSSHClient
 client = SlurmSSHClient.connect(
     host="login.example.edu",
     username="myuser",
-    key_path="~/.ssh/cluster_ed25519",       # tilde expanded; absolute paths fine too
-    remote_base_dir="/scratch/myuser/slurmly",
+    key_path="~/.ssh/cluster_ed25519",
     account="my_allocation",
 )
 ```
@@ -306,5 +305,3 @@ execution_profiles:
       OMP_NUM_THREADS: "8"
 ```
 
-For Purdue RCAC Anvil specifically, use the built-in preset and override only what you
-need. See [anvil.md](anvil.md) for the walk-through.

@@ -864,12 +864,3 @@ client = SlurmSSHClient(
     account="acct1",
 )
 ```
-
----
-
-## Version
-
-```python
-from slurmly import __version__
-print(__version__)   # "0.4.0"
-```
