@@ -2,7 +2,7 @@
 
 File format is detected from the path suffix:
 
-    .yaml / .yml -> YAML (requires PyYAML, install with `slurmly[yaml]`)
+    .yaml / .yml -> YAML
     .toml        -> TOML (stdlib `tomllib`)
     .json        -> JSON (stdlib)
 
@@ -76,12 +76,7 @@ def _load_file(path: Path) -> Any:
     suffix = path.suffix.lower()
     text = path.read_text(encoding="utf-8")
     if suffix in {".yaml", ".yml"}:
-        try:
-            import yaml  # type: ignore[import-not-found]
-        except ImportError as e:
-            raise InvalidConfig(
-                "PyYAML is required to read YAML configs (pip install slurmly[yaml])"
-            ) from e
+        import yaml
         return yaml.safe_load(text)
     if suffix == ".toml":
         import tomllib
@@ -284,7 +279,7 @@ def _resolve_remote_base_dir(
 ) -> str:
     """Resolve the working-tree root in this order:
 
-        slurm.remote_base_dir > top-level remote_base_dir > preset template
+        slurm.remote_base_dir > top-level remote_base_dir > preset template > ~/slurmly
     """
     slurm_section = raw.get("slurm") or {}
     if isinstance(slurm_section, dict) and slurm_section.get("remote_base_dir"):
@@ -293,10 +288,7 @@ def _resolve_remote_base_dir(
         return str(raw["remote_base_dir"])
     if preset is not None and preset.remote_base_dir_template:
         return render_remote_base_dir(preset.remote_base_dir_template, username=username)
-    raise InvalidConfig(
-        "remote_base_dir is required: set slurm.remote_base_dir, "
-        "top-level remote_base_dir, or use a preset with a remote_base_dir_template"
-    )
+    return "~/slurmly"
 
 
 # --- account ---------------------------------------------------------------

@@ -129,7 +129,7 @@ def test_missing_username_raises(tmp_path):
         SlurmSSHClient.from_config(str(cfg), transport=FakeTransport())
 
 
-def test_missing_remote_base_dir_without_template_raises(tmp_path):
+def test_missing_remote_base_dir_defaults_to_home_slurmly(tmp_path):
     cfg = _write(
         tmp_path / "slurmly.yaml",
         """
@@ -143,8 +143,8 @@ def test_missing_remote_base_dir_without_template_raises(tmp_path):
           name: bare
         """,
     )
-    with pytest.raises(InvalidConfig):
-        SlurmSSHClient.from_config(str(cfg), transport=FakeTransport())
+    client = SlurmSSHClient.from_config(str(cfg), transport=FakeTransport())
+    assert client.remote_base_dir == "~/slurmly"
 
 
 def test_proxy_jump_and_proxy_command_mutual_exclusion(tmp_path):

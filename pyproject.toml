@@ -13,10 +13,11 @@ authors = [{ name = "slurmly contributors" }]
 dependencies = [
     "asyncssh>=2.14",
     "pydantic>=2.5",
+    "PyYAML>=6.0",
 ]
 
 [project.optional-dependencies]
-yaml = ["PyYAML>=6.0"]
+yaml = []  # PyYAML is now a core dependency
 toml = []  # tomllib is stdlib on py>=3.11
 dev = [
     "pytest>=7.4",

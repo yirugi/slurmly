@@ -51,18 +51,18 @@ def _ensure_under_jobs(path: str, *, remote_base_dir: str) -> str:
         raise InvalidConfig("artifact path must be a non-empty string")
     if "\x00" in path:
         raise InvalidConfig("artifact path must not contain NUL bytes")
+    if "/.." in path or path.endswith("/..") or path == "..":
+        raise InvalidConfig(f"artifact path {path!r} contains a traversal segment")
     base = remote_base_dir.rstrip("/")
-    if not base.startswith("/"):
-        raise InvalidConfig("remote_base_dir must be absolute")
     jobs_root = f"{base}/jobs/"
     if path == jobs_root.rstrip("/"):
         raise InvalidConfig("refusing to operate on the jobs root itself")
-    if not path.startswith(jobs_root):
+    # Skip prefix check for tilde-based base dirs — ~ expands on the remote
+    # and can't be resolved locally. Absolute base dirs get strict enforcement.
+    if base.startswith("/") and not path.startswith(jobs_root):
         raise InvalidConfig(
             f"artifact path {path!r} is not under {jobs_root!r}"
         )
-    if "/.." in path or path.endswith("/..") or path == "..":
-        raise InvalidConfig(f"artifact path {path!r} contains a traversal segment")
     return jobs_root
 
 

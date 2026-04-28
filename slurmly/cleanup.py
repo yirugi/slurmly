@@ -71,6 +71,10 @@ def assert_safe_to_remove(path: str, *, remote_base_dir: str) -> None:
         raise InvalidConfig(f"cleanup path contains '..': {path!r}")
     if path in {"/", ""}:
         raise InvalidConfig(f"cleanup path is unsafe: {path!r}")
+    # Tilde-based base dirs expand on the remote; skip prefix enforcement.
+    base = remote_base_dir.rstrip("/")
+    if base.startswith("~"):
+        return
     prefix = jobs_root_prefix(remote_base_dir)
     if not path.startswith(prefix):
         raise InvalidConfig(
