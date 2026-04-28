@@ -187,8 +187,11 @@ def _build_ssh_config(
     if not username:
         raise InvalidConfig("ssh.username is required")
     key_path = section.get("key_path")
-    if not key_path:
-        raise InvalidConfig("ssh.key_path is required")
+    key_content = section.get("key_content")
+    if key_path and key_content:
+        raise InvalidConfig("ssh.key_path and ssh.key_content are mutually exclusive")
+    if not key_path and not key_content:
+        raise InvalidConfig("ssh.key_path or ssh.key_content is required")
 
     proxy_jump = _normalize_proxy_jump(section.get("proxy_jump"))
     proxy_command = section.get("proxy_command")
@@ -206,6 +209,7 @@ def _build_ssh_config(
         port=int(section.get("port", 22)),
         username=username,
         key_path=key_path,
+        key_content=key_content,
         known_hosts_path=section.get("known_hosts_path"),
         accept_unknown_hosts=bool(section.get("accept_unknown_hosts", True)),
         connect_timeout_seconds=float(section.get("connect_timeout_seconds", 10.0)),

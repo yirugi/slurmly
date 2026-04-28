@@ -184,6 +184,7 @@ class SlurmSSHClient:
         username: str,
         remote_base_dir: str = "~/slurmly",
         key_path: str | None = None,
+        key_content: str | None = None,
         port: int = 22,
         known_hosts_path: str | None = None,
         accept_unknown_hosts: bool = True,
@@ -206,6 +207,7 @@ class SlurmSSHClient:
             username=username,
             port=port,
             key_path=key_path,
+            key_content=key_content,
             known_hosts_path=known_hosts_path,
             accept_unknown_hosts=accept_unknown_hosts,
         ))

@@ -64,7 +64,8 @@ client = SlurmSSHClient(
 |-----------------------------|----------|----------------------|-------|
 | `host`                      | yes      | —                    | Login node hostname. |
 | `username`                  | yes      | —                    | Cluster username. |
-| `key_path`                  | no¹      | —                    | **Private key** (no `.pub` extension). `~` and `~user` are expanded at connect time; absolute paths are passed through. |
+| `key_path`                  | no¹      | —                    | Path to **private key** file (no `.pub` extension). `~` expanded at connect time. Mutually exclusive with `key_content`. |
+| `key_content`               | no¹      | —                    | Raw private key string (PEM/OpenSSH format). Use instead of `key_path` when the key is stored in an env var or secret manager. Mutually exclusive with `key_path`. |
 | `port`                      | no       | `22`                 | |
 | `known_hosts_path`          | no       | system default²      | When unset, asyncssh uses `~/.ssh/known_hosts` and `/etc/ssh/ssh_known_hosts`. Backend deployments without those files should provide an explicit path. |
 | `accept_unknown_hosts`      | no       | `true`               | When `true`, host key verification is disabled (asyncssh `known_hosts=None`). Set to `false` to enforce strict verification via `known_hosts_path` or the system default. |

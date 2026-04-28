@@ -65,6 +65,7 @@ SlurmSSHClient.connect(
     username: str,
     remote_base_dir: str = "~/slurmly",
     key_path: str | None = None,
+    key_content: str | None = None,
     port: int = 22,
     known_hosts_path: str | None = None,
     accept_unknown_hosts: bool = True,

@@ -26,6 +26,7 @@ class SSHConfig:
     username: str
     port: int = 22
     key_path: str | None = None
+    key_content: str | None = None
     known_hosts_path: str | None = None
     accept_unknown_hosts: bool = True
     connect_timeout_seconds: float = 10.0
@@ -54,6 +55,10 @@ def _looks_like_connection_loss(exc: BaseException) -> bool:
 
 class AsyncSSHTransport:
     def __init__(self, config: SSHConfig) -> None:
+        if config.key_path and config.key_content:
+            raise SSHTransportError(
+                "ssh.key_path and ssh.key_content are mutually exclusive"
+            )
         if config.proxy_jump and config.proxy_command:
             raise SSHTransportError(
                 "ssh.proxy_jump and ssh.proxy_command are mutually exclusive"
@@ -87,7 +92,9 @@ class AsyncSSHTransport:
             "keepalive_interval": cfg.keepalive_interval_seconds,
             "keepalive_count_max": cfg.keepalive_count_max,
         }
-        if cfg.key_path:
+        if cfg.key_content:
+            connect_kwargs["client_keys"] = [asyncssh.import_private_key(cfg.key_content)]
+        elif cfg.key_path:
             connect_kwargs["client_keys"] = [os.path.expanduser(cfg.key_path)]
         if cfg.accept_unknown_hosts:
             connect_kwargs["known_hosts"] = None
