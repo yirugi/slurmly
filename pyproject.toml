@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "SSH-only Slurm cluster client library"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
 authors = [{ name = "slurmly contributors" }]
 dependencies = [
     "asyncssh>=2.14",
