@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "slurmly"
-version = "0.1.2"
+dynamic = ["version"]
 description = "SSH-only Slurm cluster client library"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -26,6 +26,9 @@ dev = [
     "ruff>=0.1",
     "mypy>=1.7",
 ]
+
+[tool.setuptools.dynamic]
+version = { attr = "slurmly.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["."]

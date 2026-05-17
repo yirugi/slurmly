@@ -89,6 +89,9 @@ async with SlurmSSHClient.from_config("slurmly.yaml") as client:
 | Job arrays                     | `JobSpec(array="0-99%10", command_template=...)`                   |
 | Typed dependencies             | `JobDependency(type="afterok", job_ids=[...])`                     |
 | List / download artifacts      | `client.list_artifacts(job)`, `client.download_artifact(job, ...)` |
+| Incremental log read / follow  | `client.read_log(target, offset=...)`, `client.follow_log(target, until=...)` |
+| Binary-safe download           | `client.download_file(remote, local)`, `download_artifact(..., binary=True)` |
+| Stateless (no `SubmittedJob`)  | path-addressable APIs + `client.attach(job_id, ...)`               |
 | Plan / execute remote cleanup  | `client.plan_cleanup(...)`, `client.cleanup(plan)`                 |
 | Observability hooks            | Subclass `SlurmlyHooks`, pass to constructor                       |
 | In-memory testing              | `from slurmly.testing import FakeTransport`                        |

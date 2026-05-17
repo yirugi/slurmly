@@ -53,6 +53,21 @@ def _looks_like_connection_loss(exc: BaseException) -> bool:
     return any(hint in msg for hint in _RECONNECT_HINTS)
 
 
+def _is_no_such_file(exc: BaseException) -> bool:
+    """True if `exc` is asyncssh's "remote path missing" error.
+
+    Matched by SFTP status code (FX_NO_SUCH_FILE == 2), class name, or
+    message so we don't import asyncssh at module load just for the check.
+    """
+    if getattr(exc, "code", None) == 2:
+        return True
+    if isinstance(exc, FileNotFoundError):
+        return True
+    if "NoSuchFile" in type(exc).__name__:
+        return True
+    return "no such file" in str(exc).lower()
+
+
 class AsyncSSHTransport:
     def __init__(self, config: SSHConfig) -> None:
         if config.key_path and config.key_content:
@@ -240,6 +255,78 @@ class AsyncSSHTransport:
         except Exception as e:
             raise SSHTransportError(f"sftp read of {path} failed: {e}") from e
         return _to_str(data)
+
+    async def read_bytes(
+        self, path: str, *, offset: int = 0, length: int | None = None
+    ) -> bytes:
+        conn = await self._ensure_conn()
+        try:
+            async with (
+                conn.start_sftp_client() as sftp,
+                sftp.open(path, "rb") as f,
+            ):
+                # asyncssh read(size, offset): size=-1 reads to EOF; an
+                # offset past EOF yields b"" (no error).
+                data = await f.read(-1 if length is None else length, offset)
+        except Exception as e:
+            raise SSHTransportError(f"sftp read of {path} failed: {e}") from e
+        if isinstance(data, str):  # defensive: only if a server ignores binary mode
+            data = data.encode("utf-8", errors="replace")
+        return data
+
+    async def stat_size(self, path: str) -> int | None:
+        conn = await self._ensure_conn()
+        try:
+            async with conn.start_sftp_client() as sftp:
+                attrs = await sftp.stat(path)
+        except Exception as e:
+            if _is_no_such_file(e):
+                return None
+            raise SSHTransportError(f"sftp stat of {path} failed: {e}") from e
+        return attrs.size
+
+    async def download(self, remote_path: str, local_path: str) -> int:
+        parent = os.path.dirname(local_path)
+        if parent:
+            os.makedirs(parent, exist_ok=True)
+        conn = await self._ensure_conn()
+        try:
+            async with conn.start_sftp_client() as sftp:
+                await sftp.get(remote_path, local_path)
+        except Exception as e:
+            raise SSHTransportError(
+                f"sftp download of {remote_path} failed: {e}"
+            ) from e
+        return os.path.getsize(local_path)
+
+    async def upload_file(
+        self, local_path: str, remote_path: str, *, mode: int = 0o600
+    ) -> None:
+        if self._config.upload_method == "heredoc":
+            raise SSHTransportError(
+                "binary upload requires SFTP; heredoc upload_method cannot "
+                "transfer binary content"
+            )
+        conn = await self._ensure_conn()
+        try:
+            async with conn.start_sftp_client() as sftp:
+                await sftp.put(local_path, remote_path)
+                await sftp.chmod(remote_path, mode)
+        except Exception as e:
+            raise SSHTransportError(
+                f"sftp upload of {local_path} to {remote_path} failed: {e}"
+            ) from e
+
+    async def makedirs(self, path: str, *, mode: int = 0o700) -> None:
+        conn = await self._ensure_conn()
+        try:
+            import asyncssh  # already imported+cached by _ensure_conn above
+
+            attrs = asyncssh.SFTPAttrs(permissions=mode)
+            async with conn.start_sftp_client() as sftp:
+                await sftp.makedirs(path, attrs, exist_ok=True)
+        except Exception as e:
+            raise SSHTransportError(f"sftp makedirs of {path} failed: {e}") from e
 
 
 def _to_str(data: object) -> str:

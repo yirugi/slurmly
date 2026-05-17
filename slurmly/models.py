@@ -257,9 +257,12 @@ class SubmittedJob(_Open):
     @field_validator("internal_job_id")
     @classmethod
     def _v_iid(cls, v: str) -> str:
-        if not is_valid_internal_job_id(v):
+        # "" is the sentinel for a job reconstructed via `client.attach()`
+        # across a process boundary — there is no local submit record, only
+        # the persisted Slurm id + remote paths.
+        if v != "" and not is_valid_internal_job_id(v):
             raise ValueError(
-                "internal_job_id must match 'slurmly-<8 hex>'"
+                "internal_job_id must be '' or match 'slurmly-<8 hex>'"
             )
         return v
 
@@ -300,6 +303,15 @@ class LogChunk(_Open):
     bytes_requested: int | None = None
     fetched_at: str
     note: str | None = None
+
+    # Offset-based incremental read (read_log / follow_log). Defaults keep
+    # back-compat for tail_stdout/tail_stderr, which don't set them.
+    next_offset: int = 0
+    """Resume cursor: pass as `offset` to the next `read_log` call."""
+    size: int | None = None
+    """Remote file size at fetch time; None when the file is absent."""
+    truncated: bool = False
+    """True when the file shrank/rotated below `offset` and the cursor reset."""
 
 
 # --- JobInfo ---------------------------------------------------------------

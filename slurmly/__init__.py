@@ -1,6 +1,6 @@
 """slurmly — SSH-only Slurm cluster client library."""
 
-from .artifacts import Artifact, ArtifactDownload
+from .artifacts import Artifact, ArtifactDownload, DownloadResult
 from .capabilities import CapabilityReport
 from .cleanup import CleanupCandidate, CleanupPlan, CleanupResult
 from .client import SlurmSSHClient
@@ -41,7 +41,7 @@ from .presets import get_preset, list_presets
 from .profiles import ClusterPreset, ClusterProfile, ExecutionProfile
 from .states import Lifecycle
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 __all__ = [
     # client
@@ -82,6 +82,7 @@ __all__ = [
     "DependencyType",
     "Artifact",
     "ArtifactDownload",
+    "DownloadResult",
     # exceptions
     "SlurmlyError",
     "InvalidConfig",

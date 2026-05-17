@@ -429,3 +429,55 @@ async def main():
 
 asyncio.run(main())
 ```
+
+---
+
+## 15. Live log streaming & binary artifacts (stateless)
+
+A common split: one process submits and persists `slurm_job_id` + paths to a
+DB; a *different* process (an SSE endpoint, a restarted worker) streams the log
+and downloads results — with no `SubmittedJob` in hand.
+
+```python
+# --- submitter process: persist what you need ---
+job = await client.submit(spec)
+db.save(job.model_dump())          # SubmittedJob is a Pydantic model
+
+# --- streaming process: rebuild a handle, no SSH ---
+record = db.load(...)
+job = client.attach(
+    record["slurm_job_id"],
+    remote_job_dir=record["remote_job_dir"],
+    stdout_path=record["stdout_path"],
+    stderr_path=record["stderr_path"],
+)
+
+# Follow the log until the job is terminal. `until` is a cheap async
+# predicate over status you are already polling — slurmly never queries
+# Slurm itself inside follow_log.
+async def done() -> bool:
+    return is_terminal(await client.get_job(job.slurm_job_id))
+
+async for chunk in client.follow_log(job, until=done, poll_interval=2.0):
+    sse_send(chunk.content)        # gap-free, no client-side dedupe
+
+# Or read incrementally by raw path (fully stateless — no attach needed):
+cursor = 0
+while True:
+    c = await client.read_log(record["stdout_path"], offset=cursor)
+    if c.content:
+        emit(c.content)
+        cursor = c.next_offset     # resume here next time
+
+# Binary-safe artifact retrieval (no UTF-8 corruption):
+await client.download_file(f"{job.remote_job_dir}/result.sl4", "/tmp/result.sl4")
+har = await client.download_artifact(job, "out.har", binary=True)
+open("/tmp/out.har", "wb").write(har.content_bytes)
+```
+
+`read_log`'s `next_offset` is the resume cursor: persist it and feed it back as
+`offset` to never lose or duplicate lines, even across process restarts. If the
+remote file shrinks/rotates, the returned chunk has `truncated=True` and the
+cursor resets to `0`.
+
+---

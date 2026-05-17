@@ -321,7 +321,7 @@ filtered post-hoc as a safety net.
 
 ---
 
-### `download_artifact(job, name, *, max_bytes=None)`
+### `download_artifact(job, name, *, max_bytes=None, binary=False)`
 
 ```python
 async def download_artifact(
@@ -329,12 +329,92 @@ async def download_artifact(
     name: str,
     *,
     max_bytes: int | None = None,
+    binary: bool = False,
 ) -> ArtifactDownload
 ```
 
 Read an artifact by name **relative to the job directory**. Absolute paths and `..`
 segments are rejected. `max_bytes` truncates the read; `ArtifactDownload.truncated`
 reflects whether the cap was hit.
+
+`binary=False` (default) is unchanged text behavior (`content` is UTF-8 decoded).
+`binary=True` reads raw bytes with no decode into `ArtifactDownload.content_bytes`
+(leaving `content=""`) — use it for `.sl4`/`.upd`/`.har` and other non-text files.
+
+---
+
+## Logs & artifacts
+
+Offset-addressed incremental reads, binary-safe download, and a live
+follow iterator. Every API below accepts either a `SubmittedJob` **or a bare
+remote path string**, so a process holding only DB-persisted strings works
+with zero `SubmittedJob` (see `attach`).
+
+### `read_log(target, *, stream="stdout", offset=0, max_bytes=None)`
+
+```python
+async def read_log(
+    target: SubmittedJob | str,
+    *,
+    stream: Literal["stdout", "stderr"] = "stdout",
+    offset: int = 0,
+    max_bytes: int | None = None,
+) -> LogChunk
+```
+
+Byte-exact incremental read. `target` is a remote path (stateless) or a
+`SubmittedJob` (then `stream` selects `stdout_path`/`stderr_path`).
+
+- **absent file** → `exists=False`, `content=""`, `next_offset=offset`, `size=None`
+- **normal** → `content` is `bytes[offset:offset+max_bytes]` decoded with
+  `errors="replace"`; `next_offset` advances by the byte count read, so feeding
+  it back as the next `offset` never loses or duplicates lines
+- **shrink/rotate** (`size < offset`) → `truncated=True`, re-read from `0`
+
+### `follow_log(target, *, stream="stdout", from_offset=0, poll_interval=2.0, until=None, idle_grace=5.0)`
+
+```python
+async def follow_log(...) -> AsyncIterator[LogChunk]
+```
+
+Async generator yielding successive `LogChunk`s as the log grows (only when
+new bytes appear). The app owns the stop condition via `until` (an
+`async () -> bool`) — slurmly never queries Slurm state itself here, so the
+consumer typically passes a cheap predicate over status it is already polling:
+
+```python
+async for chunk in client.follow_log(
+    job, until=lambda: _is_done(),  # async predicate
+):
+    sse.send(chunk.content)
+```
+
+File-absent (job PENDING) keeps polling. After `until` first returns True, one
+trailing read drains the final flush, then ~`idle_grace` seconds of extra reads
+catch the buffered tail, then iteration stops. `aclose()` / cancellation is clean.
+
+### `download_file(remote_path, local_path)`
+
+```python
+async def download_file(remote_path: str, local_path: str) -> DownloadResult
+```
+
+Binary-safe download of an **explicit** remote path. The lower layer beneath
+`download_artifact`: no job needed and **no** job-dir sandbox check (the caller
+owns the path). Parent directories of `local_path` are created. Raises
+`SSHTransportError` if the remote path is missing.
+
+### `attach(slurm_job_id, *, remote_job_dir, stdout_path, stderr_path, cluster=None)`
+
+```python
+def attach(...) -> SubmittedJob
+```
+
+Pure constructor (no SSH) rebuilding a minimal `SubmittedJob` from
+DB-persisted fields after a process boundary (Prefect/Celery/restarted web
+worker). `internal_job_id` is `""` (the "no local submit record" sentinel).
+`SubmittedJob` is a Pydantic model — the recommended persistence path is
+`job.model_dump()` ↔ `SubmittedJob.model_validate(...)`.
 
 ---
 
@@ -469,7 +549,13 @@ class LogChunk(BaseModel):
     bytes_requested: int | None = None
     fetched_at: str                     # ISO 8601 with Z
     note: str | None = None
+    next_offset: int = 0                # resume cursor for the next read_log
+    size: int | None = None             # remote file size at fetch time (None if absent)
+    truncated: bool = False             # offset reset due to shrink/rotate
 ```
+
+`next_offset`/`size`/`truncated` are set by `read_log`/`follow_log`; `tail_*`
+leave them at their defaults.
 
 ### `CancelResult`
 
@@ -763,11 +849,18 @@ class Artifact(BaseModel):
 
 class ArtifactDownload(BaseModel):
     path: str
-    content: str                        # bytes decoded as UTF-8
+    content: str                        # text reads: bytes decoded as UTF-8
+    content_bytes: bytes | None = None  # binary=True reads: raw bytes (content="")
     fetched_at: str
     bytes_requested: int | None = None
     truncated: bool = False             # True if max_bytes was hit
     raw: dict = {}
+
+class DownloadResult(BaseModel):        # result of client.download_file
+    remote_path: str
+    local_path: str
+    bytes_written: int
+    fetched_at: str
 ```
 
 Artifact path validation matches cleanup's, with one extra rule for

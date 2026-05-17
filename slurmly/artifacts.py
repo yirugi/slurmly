@@ -33,16 +33,34 @@ class Artifact(BaseModel):
 
 
 class ArtifactDownload(BaseModel):
-    """A successful artifact read."""
+    """A successful artifact read.
+
+    Text reads (default) populate ``content`` and leave ``content_bytes``
+    None. Binary reads (``download_artifact(..., binary=True)``) populate
+    ``content_bytes`` and leave ``content`` empty — the raw bytes are
+    decode-free so ``.sl4``/``.upd``/``.har`` survive intact.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
     path: str
     content: str
+    content_bytes: bytes | None = None
     fetched_at: str
     bytes_requested: int | None = None
     truncated: bool = False
     raw: dict = Field(default_factory=dict)
+
+
+class DownloadResult(BaseModel):
+    """Result of an explicit-path binary download (`client.download_file`)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    remote_path: str
+    local_path: str
+    bytes_written: int
+    fetched_at: str
 
 
 def _ensure_under_jobs(path: str, *, remote_base_dir: str) -> str:

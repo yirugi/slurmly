@@ -29,12 +29,14 @@ import asyncio
 import json
 import shlex
 import time
+from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
 
 from .artifacts import (
     Artifact,
     ArtifactDownload,
+    DownloadResult,
     assert_artifact_path_safe,
     resolve_artifact_path,
 )
@@ -1003,6 +1005,7 @@ class SlurmSSHClient:
         name: str,
         *,
         max_bytes: int | None = None,
+        binary: bool = False,
     ) -> ArtifactDownload:
         """Read a file inside ``job.remote_job_dir`` and return its contents.
 
@@ -1011,6 +1014,11 @@ class SlurmSSHClient:
         size at the transport layer; the returned ``truncated`` flag reflects
         whether the cap was hit (best-effort: equality of returned size and
         cap implies truncation).
+
+        ``binary=False`` (default) is unchanged text behavior. ``binary=True``
+        reads raw bytes (no decode) into ``content_bytes`` and leaves
+        ``content`` empty — use it for ``.sl4``/``.upd``/``.har`` and other
+        non-text artifacts.
         """
         path = resolve_artifact_path(
             remote_job_dir=job.remote_job_dir,
@@ -1022,6 +1030,17 @@ class SlurmSSHClient:
         # We deliberately don't translate either: callers checking artifact
         # availability should prefer `list_artifacts(job, pattern=name)`,
         # which returns an empty list rather than raising.
+        if binary:
+            async with self._semaphore:
+                raw = await self._transport.read_bytes(path, length=max_bytes)
+            return ArtifactDownload(
+                path=path,
+                content="",
+                content_bytes=raw,
+                fetched_at=_utc_now_iso(),
+                bytes_requested=max_bytes,
+                truncated=(max_bytes is not None and len(raw) >= max_bytes),
+            )
         async with self._semaphore:
             data = await self._transport.read_text(path, max_bytes=max_bytes)
         truncated = (
@@ -1033,6 +1052,165 @@ class SlurmSSHClient:
             fetched_at=_utc_now_iso(),
             bytes_requested=max_bytes,
             truncated=truncated,
+        )
+
+    async def download_file(
+        self, remote_path: str, local_path: str
+    ) -> DownloadResult:
+        """Binary-safe download of an explicit remote path to ``local_path``.
+
+        The lower layer beneath `download_artifact`: no job needed and **no**
+        job-dir sandbox check (the caller owns the path). Parent directories
+        of ``local_path`` are created. Raises SSHTransportError if the remote
+        path is missing.
+        """
+        async with self._semaphore:
+            written = await self._transport.download(remote_path, local_path)
+        return DownloadResult(
+            remote_path=remote_path,
+            local_path=local_path,
+            bytes_written=written,
+            fetched_at=_utc_now_iso(),
+        )
+
+    def _log_path(
+        self, target: SubmittedJob | str, stream: Literal["stdout", "stderr"]
+    ) -> str:
+        if isinstance(target, str):
+            return target
+        return target.stdout_path if stream == "stdout" else target.stderr_path
+
+    async def read_log(
+        self,
+        target: SubmittedJob | str,
+        *,
+        stream: Literal["stdout", "stderr"] = "stdout",
+        offset: int = 0,
+        max_bytes: int | None = None,
+    ) -> LogChunk:
+        """Incremental, offset-addressed log read.
+
+        ``target`` is a remote path (stateless) or a SubmittedJob (then
+        ``stream`` selects ``stdout_path``/``stderr_path``).
+
+        - absent file  -> ``exists=False``, ``content=""``,
+          ``next_offset=offset``, ``size=None``
+        - normal       -> ``content`` is ``bytes[offset:offset+max_bytes]``
+          decoded ``errors="replace"``; ``next_offset`` advances by the byte
+          count read (so successive reads never lose or duplicate lines)
+        - shrink/rotate (``size < offset``) -> ``truncated=True``, re-read
+          from 0, ``next_offset`` = new length
+        """
+        path = self._log_path(target, stream)
+        async with self._semaphore:
+            size = await self._transport.stat_size(path)
+        if size is None:
+            return LogChunk(
+                path=path,
+                content="",
+                exists=False,
+                bytes_requested=max_bytes,
+                fetched_at=_utc_now_iso(),
+                note="file not yet present on the cluster",
+                next_offset=offset,
+                size=None,
+            )
+        truncated = size < offset
+        read_offset = 0 if truncated else offset
+        async with self._semaphore:
+            raw = await self._transport.read_bytes(
+                path, offset=read_offset, length=max_bytes
+            )
+        return LogChunk(
+            path=path,
+            content=raw.decode("utf-8", errors="replace"),
+            exists=True,
+            bytes_requested=max_bytes,
+            fetched_at=_utc_now_iso(),
+            next_offset=read_offset + len(raw),
+            size=size,
+            truncated=truncated,
+        )
+
+    async def follow_log(
+        self,
+        target: SubmittedJob | str,
+        *,
+        stream: Literal["stdout", "stderr"] = "stdout",
+        from_offset: int = 0,
+        poll_interval: float = 2.0,
+        until: Callable[[], Awaitable[bool]] | None = None,
+        idle_grace: float = 5.0,
+    ) -> AsyncIterator[LogChunk]:
+        """Yield successive LogChunks as the log grows (only when new bytes
+        appear). The app owns the stop condition via ``until`` — slurmly never
+        queries Slurm state itself here.
+
+        File-absent (job PENDING) is not an error: it keeps polling. After
+        ``until`` first returns True, one trailing read drains the final
+        flush, then ~``idle_grace`` seconds of extra reads catch the buffered
+        tail, then iteration stops. Cancellation (``aclose()`` /
+        ``CancelledError``) propagates cleanly.
+        """
+        cursor = from_offset
+        while True:
+            chunk = await self.read_log(
+                target, stream=stream, offset=cursor
+            )
+            if chunk.content:
+                yield chunk
+                cursor = chunk.next_offset
+            if until is not None and await until():
+                # One trailing read for the final flush...
+                final = await self.read_log(
+                    target, stream=stream, offset=cursor
+                )
+                if final.content:
+                    yield final
+                    cursor = final.next_offset
+                # ...then drain any buffered tail for ~idle_grace seconds.
+                deadline = time.monotonic() + idle_grace
+                while time.monotonic() < deadline:
+                    await asyncio.sleep(poll_interval)
+                    extra = await self.read_log(
+                        target, stream=stream, offset=cursor
+                    )
+                    if extra.content:
+                        yield extra
+                        cursor = extra.next_offset
+                return
+            await asyncio.sleep(poll_interval)
+
+    def attach(
+        self,
+        slurm_job_id: str,
+        *,
+        remote_job_dir: str,
+        stdout_path: str,
+        stderr_path: str,
+        cluster: str | None = None,
+    ) -> SubmittedJob:
+        """Rebuild a minimal SubmittedJob from persisted fields — pure
+        constructor, no SSH.
+
+        Lets ``tail_*``/``list_artifacts``/``download_*``/``follow_log`` work
+        after a process boundary (Prefect/Celery/restarted web worker) where
+        only the Slurm id + paths were persisted. ``internal_job_id`` is ``""``
+        (the "no local submit record" sentinel) and ``submit_*`` are empty.
+        SubmittedJob is a Pydantic model, so the recommended persistence path
+        is ``job.model_dump()`` / ``SubmittedJob.model_validate(...)``.
+        """
+        return SubmittedJob(
+            internal_job_id="",
+            slurm_job_id=slurm_job_id,
+            cluster=cluster,
+            remote_job_dir=remote_job_dir,
+            remote_script_path="",
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            submitted_at=None,
+            submit_stdout="",
+            submit_stderr="",
         )
 
     # --- Phase 3: polling ---

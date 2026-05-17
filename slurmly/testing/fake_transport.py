@@ -14,10 +14,11 @@ final SubmittedJob.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from typing import Awaitable, Callable, Union
 
-from ..exceptions import RemoteCommandError
+from ..exceptions import RemoteCommandError, SSHTransportError
 from ..ssh import CommandResult
 
 
@@ -32,7 +33,7 @@ class RecordedCall:
 @dataclass
 class RecordedUpload:
     path: str
-    content: str
+    content: str | bytes
     mode: int
 
 
@@ -57,10 +58,26 @@ class FakeTransport:
     reads: list[str] = field(default_factory=list)
 
     # Optional in-memory file store: path -> content. `read_text` reads from
-    # here; `upload_text` writes here.
-    files: dict[str, str] = field(default_factory=dict)
+    # here; `upload_text` writes here. Values may be str or bytes — the
+    # byte-oriented APIs (`read_bytes`/`stat_size`/`download`) coerce str to
+    # UTF-8 so existing str-seeded tests keep working.
+    files: dict[str, str | bytes] = field(default_factory=dict)
+
+    # Paths passed to `makedirs`, in call order.
+    made_dirs: list[str] = field(default_factory=list)
 
     closed: bool = False
+
+    def _as_bytes(self, path: str) -> bytes:
+        value = self.files[path]
+        return value if isinstance(value, bytes) else value.encode("utf-8")
+
+    def append(self, path: str, data: bytes) -> None:
+        """Append bytes to an in-memory file (creating it). Lets tests
+        simulate a growing log; shrink/rotate is just a direct reassignment
+        of ``files[path]``."""
+        prefix = self._as_bytes(path) if path in self.files else b""
+        self.files[path] = prefix + data
 
     async def run(
         self,
@@ -101,10 +118,57 @@ class FakeTransport:
         self.reads.append(path)
         if path not in self.files:
             raise FileNotFoundError(path)
-        data = self.files[path]
+        value = self.files[path]
+        data = (
+            value
+            if isinstance(value, str)
+            else value.decode("utf-8", errors="replace")
+        )
         if max_bytes is not None:
             return data[:max_bytes]
         return data
+
+    async def read_bytes(
+        self, path: str, *, offset: int = 0, length: int | None = None
+    ) -> bytes:
+        self.reads.append(path)
+        if path not in self.files:
+            raise SSHTransportError(f"sftp read of {path} failed: no such file")
+        raw = self._as_bytes(path)
+        end = None if length is None else offset + length
+        return raw[offset:end]
+
+    async def stat_size(self, path: str) -> int | None:
+        if path not in self.files:
+            return None
+        return len(self._as_bytes(path))
+
+    async def download(self, remote_path: str, local_path: str) -> int:
+        self.reads.append(remote_path)
+        if remote_path not in self.files:
+            raise SSHTransportError(
+                f"sftp download of {remote_path} failed: no such file"
+            )
+        raw = self._as_bytes(remote_path)
+        parent = os.path.dirname(local_path)
+        if parent:
+            os.makedirs(parent, exist_ok=True)
+        with open(local_path, "wb") as fh:
+            fh.write(raw)
+        return len(raw)
+
+    async def upload_file(
+        self, local_path: str, remote_path: str, *, mode: int = 0o600
+    ) -> None:
+        with open(local_path, "rb") as fh:
+            data = fh.read()
+        self.uploads.append(
+            RecordedUpload(path=remote_path, content=data, mode=mode)
+        )
+        self.files[remote_path] = data
+
+    async def makedirs(self, path: str, *, mode: int = 0o700) -> None:
+        self.made_dirs.append(path)
 
     async def close(self) -> None:
         self.closed = True
