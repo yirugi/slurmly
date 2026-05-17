@@ -240,8 +240,11 @@ async def test_tilde_in_key_path_is_expanded_at_connect_time(monkeypatch):
 
     from slurmly.ssh.transport import AsyncSSHTransport, SSHConfig
 
+    # accept_unknown_hosts (default True) is the master switch — it passes
+    # known_hosts=None and short-circuits known_hosts_path. Turn it off so
+    # the known_hosts_path tilde-expansion branch is actually exercised.
     cfg = SSHConfig(host="h", username="u", key_path="~/.ssh/test_key",
-                    known_hosts_path="~/known")
+                    known_hosts_path="~/known", accept_unknown_hosts=False)
     assert cfg.key_path == "~/.ssh/test_key"
     assert cfg.known_hosts_path == "~/known"
 
